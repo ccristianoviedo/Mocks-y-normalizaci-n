@@ -4,6 +4,8 @@ const {Server: HttpServer} = require("http");
 const Messages = require("./db/controller/messages")
 const { optionsa } = require("./options/sqliteMessages");
 const knex = require("knex")(optionsa);
+const fs =require("fs")
+const {faker}=require("@faker-js/faker")
 
 const app = express();
 const httpServer =  new HttpServer(app);
@@ -27,7 +29,23 @@ io.on('connection', (socket) => {
         io.sockets.emit('messages', messages);
     })
 })
-app.get("/guardar",(req, res) => { 
+app.get("/guardar",(req, res) => {
+    const mensajes = [];
+    for (let i=0; i < 10; i++){
+        const mensaje={
+            autor:{
+                id:faker.internet.email(),
+                nombre:faker.name.firstName() ,
+                apellido:faker.name.lastName() ,
+                edad:faker.date.birthdate({ min: 18, max: 65, mode: 'age' }),
+                alias:faker.animal.bird(),
+                avatar:faker.internet.avatar(),
+            },
+            text:faker.git.commitMessage()
+        }
+        
+        mensajes.push(mensaje)
+    }
     knex("messages")
     .insert(messages)
     .then(() => {
@@ -38,7 +56,8 @@ app.get("/guardar",(req, res) => {
     })
     .finally(() => {
         knex.destroy();
-    });       
+    });
+    res.status(200).json(mensajes)       
     
 });   
  
